@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/main.dart';
 import 'package:flutter_application_1/model/contents.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'dart:io';
 
 class PointListPage extends StatefulWidget {
   PointListPage({super.key});
@@ -10,6 +12,8 @@ class PointListPage extends StatefulWidget {
 }
 
 class _PointListPageState extends State<PointListPage> {
+  List<BannerAd> bannerads = [];
+  bool isLoaded = false;
   List<Contents> contentsList = [
     Contents(title: 'ポイント獲得', imagePath: 'assets/logo.png', point: 1),
     Contents(title: 'ポイントゲット', imagePath: 'assets/logo.png', point: 2),
@@ -21,6 +25,31 @@ class _PointListPageState extends State<PointListPage> {
     Contents(title: 'ポイントゲット', imagePath: 'assets/logo.png', point: 2),
     Contents(title: 'ポイントブースト', imagePath: 'assets/logo.png', point: 3),
   ];
+
+  void initAd() {
+    for (int i = 0; i < contentsList.length ~/ 4; i++) {
+      BannerAd bannerAd = BannerAd(
+          adUnitId: Platform.isAndroid
+              ? 'ca-app-pub-3940256099942544/6300978111'
+              : 'ca-app-pub-3940256099942544/2934735716',
+          size: AdSize.banner,
+          request: AdRequest(),
+          listener: BannerAdListener(onAdLoaded: (Ad ad) {
+            setState(() {
+              isLoaded = true;
+            });
+          }))
+        ..load();
+      bannerads.add(bannerAd);
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    initAd();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -117,9 +146,13 @@ class _PointListPageState extends State<PointListPage> {
       }
       if (i % 4 == 3) {
         columnChildren.add(Container(
-          width: 200,
-          height: 100,
-          color: Colors.red,
+          width: bannerads[i ~/ 4].size.width.toDouble(),
+          height: bannerads[i ~/ 4].size.width.toDouble(),
+          child: isLoaded
+              ? AdWidget(
+                  ad: bannerads[i ~/ 4],
+                )
+              : Container(),
         ));
       }
     }
